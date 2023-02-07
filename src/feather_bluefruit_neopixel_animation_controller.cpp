@@ -133,6 +133,13 @@ uint8_t readPacket(Adafruit_BLE *ble, uint16_t timeout);
 float parsefloat(uint8_t *buffer);
 void printHex(const uint8_t *data, const uint32_t numBytes);
 
+// function prototypes of functions declared later
+void colorWipe(uint32_t c, uint8_t wait);
+void larsonScanner(uint32_t c, uint8_t wait);
+void theaterChase(uint32_t c, uint8_t wait);
+void rainbowCycle(uint8_t wait);
+uint32_t Wheel(byte WheelPos);
+
 // the packet buffer
 extern uint8_t packetbuffer[];
 

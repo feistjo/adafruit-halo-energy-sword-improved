@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 // The current code has synchronous/blocking loops with delays like this
-// This example blocks anything else from happening for 10 seconds
+// This example blocks anything else from happening for 10 seconds 
 void BlockingDelayLoopFunction()
 {
     for (int i = 0; i < 1000; i++)

@@ -14,7 +14,7 @@ void BlockingDelayLoopFunction()
 
 // You should make nonblocking versions of the functions, something like this
 uint32_t loop_counter{0};
-uint32_t start_time; // will be set when
+uint32_t start_time; // will be set when we initialize the "loop"
 
 void StartNonblockingLoopFunction()
 {

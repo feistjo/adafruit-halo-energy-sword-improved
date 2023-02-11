@@ -337,16 +337,7 @@ void loop(void)
         {
           current_mode = Mode::ColorWipes;
           animation_loop_counter = 0;
-          StartColorWipe(color_wipe_colors[animation_loop_counter], 20);
-          /* colorWipe(pixel.Color(114, 0, 255), 20);
-          colorWipe(pixel.Color(0, 0, 0), 20);
-          colorWipe(pixel.Color(0, 50, 255), 20);
-          colorWipe(pixel.Color(0, 0, 0), 20);
-          colorWipe(pixel.Color(0, 220, 255), 20);
-          colorWipe(pixel.Color(0, 0, 0), 20);
-          colorWipe(pixel.Color(255, 225, 255), 20);
-          colorWipe(pixel.Color(0, 0, 0), 20);
-          pixel.show(); // This sends the updated pixel color to the hardware. */
+          StartColorWipe(color_wipe_colors[animation_loop_counter], 30);
         }
 
         /* if (animationState == 3)
@@ -401,7 +392,7 @@ void loop(void)
         {
           current_mode = Mode::RotateColorWipes;
           animation_loop_counter = 0;
-          StartColorWipe(color_wipe_colors[animation_loop_counter], 20);
+          StartColorWipe(color_wipe_colors[animation_loop_counter], 30);
         }
       }
       else

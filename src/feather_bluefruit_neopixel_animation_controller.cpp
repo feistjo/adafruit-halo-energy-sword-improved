@@ -155,6 +155,7 @@ uint32_t Wheel(byte WheelPos);
 void StartColorWipe(uint32_t c, uint8_t wait);
 void ProcessAnimationState();
 bool ProcessColorWipe();
+bool ProcessRotateColorWipe();
 
 // the packet buffer
 extern uint8_t packetbuffer[];
@@ -248,6 +249,7 @@ enum class Mode
 {
   Static,
   ColorWipes,
+  RotateColorWipes,
   LarsonScanners //,
                  // EtCetera
 };
@@ -394,6 +396,13 @@ void loop(void)
             current_mode = previous_mode;
           }
         }
+
+        if (animationState == 8)
+        {
+          current_mode = Mode::RotateColorWipes;
+          animation_loop_counter = 0;
+          StartColorWipe(color_wipe_colors[animation_loop_counter], 20);
+        }
       }
       else
       {
@@ -418,6 +427,17 @@ void ProcessAnimationState()
       StartColorWipe(color_wipe_colors[animation_loop_counter], 30);
     }
     // do for other animations
+    break;
+  case Mode::RotateColorWipes:
+    if (ProcessRotateColorWipe())
+    {
+      animation_loop_counter++;
+      if (animation_loop_counter >= num_color_wipe_colors)
+      {
+        animation_loop_counter = 0;
+      }
+      StartColorWipe(color_wipe_colors[animation_loop_counter], 30);
+    }
     break;
   default:
     break;
@@ -454,6 +474,34 @@ bool ProcessColorWipe()
         last_frame_time = millis();
       }
       pixel.setPixelColor(pixel_number, color);
+      pixel.show();
+      pixel_number++; // now on the next loop iteration
+    }
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+// returns whether or not the colorwipe is fiished
+bool ProcessRotateColorWipe()
+{
+  if (pixel_number < pixel.numPixels())
+  {
+    if (millis() - last_frame_time >= wait_time) // if current time is after when the current loop iteration should be over
+    {
+      if (millis() - last_frame_time <= 2 * wait_time)
+      {
+        last_frame_time += wait_time;
+      }
+      else
+      {
+        last_frame_time = millis();
+      }
+      pixel.setPixelColor(0, pixel_number, color);
+      pixel.setPixelColor(1, pixel.numPixels() - pixel_number, color);
       pixel.show();
       pixel_number++; // now on the next loop iteration
     }

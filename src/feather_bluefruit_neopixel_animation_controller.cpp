@@ -174,7 +174,7 @@ uint8_t green = 255;
 uint8_t blue = 255;
 uint8_t animationState = 1;
 
-int pos = 0, dir = 1; // Position, direction of "eye" for larson scanner animation
+unsigned int pos = 0, dir = 1; // Position, direction of "eye" for larson scanner animation
 
 void setup(void)
 {
@@ -630,7 +630,7 @@ void theaterChase(uint32_t c, uint8_t wait)
   { // do 10 cycles of chasing
     for (int q = 0; q < 3; q++)
     {
-      for (int i = 0; i < pixel.numPixels(); i = i + 3)
+      for (uint8_t i = 0; i < pixel.numPixels(); i = i + 3)
       {
         pixel.setPixelColor(i + q, c); // turn every third pixel on
       }
@@ -638,7 +638,7 @@ void theaterChase(uint32_t c, uint8_t wait)
 
       delay(wait);
 
-      for (int i = 0; i < pixel.numPixels(); i = i + 3)
+      for (uint8_t i = 0; i < pixel.numPixels(); i = i + 3)
       {
         pixel.setPixelColor(i + q, 0); // turn every third pixel off
       }
@@ -653,7 +653,7 @@ void theaterChaseRainbow(uint8_t wait)
   { // cycle all 256 colors in the wheel
     for (int q = 0; q < 3; q++)
     {
-      for (int i = 0; i < pixel.numPixels(); i = i + 3)
+      for (uint8_t i = 0; i < pixel.numPixels(); i = i + 3)
       {
         pixel.setPixelColor(i + q, Wheel((i + j) % 255)); // turn every third pixel on
       }
@@ -661,7 +661,7 @@ void theaterChaseRainbow(uint8_t wait)
 
       delay(wait);
 
-      for (int i = 0; i < pixel.numPixels(); i = i + 3)
+      for (uint8_t i = 0; i < pixel.numPixels(); i = i + 3)
       {
         pixel.setPixelColor(i + q, 0); // turn every third pixel off
       }

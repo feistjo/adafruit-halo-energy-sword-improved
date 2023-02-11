@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#ifdef false
 // The current code has synchronous/blocking loops with delays like this
 // This example blocks anything else from happening for 10 seconds 
 void BlockingDelayLoopFunction()
@@ -28,6 +29,7 @@ void ProcessNonblockingLoopFunction()
     if (millis() >= start_time + loop_counter * delay_time) // if current time is after when the current loop iteration should be over
     {
         // do something
+
         loop_counter++; // now on the next loop iteration
     }
 }
@@ -91,3 +93,4 @@ void MainLoopProcessCommand()
 
     // main loop should then have the switch case
 }
+#endif

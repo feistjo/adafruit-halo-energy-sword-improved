@@ -79,6 +79,18 @@ public:
     p2.setPixelColor(n, c);
   }
 
+  void setPixelColor(bool pixel, uint16_t n, uint32_t c)
+  {
+    if (pixel)
+    {
+      p2.setPixelColor(n, c);
+    }
+    else
+    {
+      p1.setPixelColor(n, c);
+    }
+  }
+
   void show()
   {
     p1.show();
@@ -140,6 +152,10 @@ void theaterChase(uint32_t c, uint8_t wait);
 void rainbowCycle(uint8_t wait);
 uint32_t Wheel(byte WheelPos);
 
+void StartColorWipe(uint32_t c, uint8_t wait);
+void ProcessAnimationState();
+bool ProcessColorWipe();
+
 // the packet buffer
 extern uint8_t packetbuffer[];
 
@@ -173,9 +189,9 @@ void setup(void)
   {
     pixel.setPixelColor(i, pixel.Color(0, 0, 0)); // off
   }
-  colorWipe(pixel.Color(255, 255, 255), 15);
-  colorWipe(pixel.Color(0, 0, 0), 15);
-  pixel.show();
+  // colorWipe(pixel.Color(255, 255, 255), 15);
+  // colorWipe(pixel.Color(0, 0, 0), 15);
+  // pixel.show();
 
   Serial.println(F("Adafruit Bluefruit Neopixel Color Picker Example"));
   Serial.println(F("------------------------------------------------"));
@@ -228,6 +244,29 @@ void setup(void)
   Serial.println(F("***********************"));
 }
 
+enum class Mode
+{
+  Static,
+  ColorWipes,
+  LarsonScanners //,
+                 // EtCetera
+};
+
+Mode current_mode{Mode::Static};
+Mode previous_mode{Mode::Static};
+
+uint8_t num_color_wipe_colors{8};
+uint32_t color_wipe_colors[] = {pixel.Color(114, 0, 255),
+                                pixel.Color(0, 0, 0),
+                                pixel.Color(0, 50, 255),
+                                pixel.Color(0, 0, 0),
+                                pixel.Color(0, 220, 255),
+                                pixel.Color(0, 0, 0),
+                                pixel.Color(255, 225, 255),
+                                pixel.Color(0, 0, 0)};
+
+uint32_t animation_loop_counter = 0;
+
 /**************************************************************************/
 /*!
     @brief  Constantly poll for new command or response data
@@ -235,121 +274,206 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
+  ProcessAnimationState();
+
   /* Wait for new data to arrive */
   uint8_t len = readPacket(&ble, BLE_READPACKET_TIMEOUT);
-  if (len == 0)
-    return;
-
-  /* Got a packet! */
-  // printHex(packetbuffer, len);
-
-  // Color
-  if (packetbuffer[1] == 'C')
-  {
-    uint8_t red = packetbuffer[2];
-    uint8_t green = packetbuffer[3];
-    uint8_t blue = packetbuffer[4];
-    Serial.print("RGB #");
-    if (red < 0x10)
-      Serial.print("0");
-    Serial.print(red, HEX);
-    if (green < 0x10)
-      Serial.print("0");
-    Serial.print(green, HEX);
-    if (blue < 0x10)
-      Serial.print("0");
-    Serial.println(blue, HEX);
-
-    for (uint8_t i = 0; i < NUMPIXELS; i++)
-    {
-      pixel.setPixelColor(i, pixel.Color(red, green, blue));
-    }
-    pixel.show(); // This sends the updated pixel color to the hardware.
-  }
-
-  // Buttons
-  if (packetbuffer[1] == 'B')
+  if (len != 0)
   {
 
-    uint8_t buttnum = packetbuffer[2] - '0';
-    boolean pressed = packetbuffer[3] - '0';
-    Serial.print("Button ");
-    Serial.print(buttnum);
-    animationState = buttnum;
-    if (pressed)
-    {
-      Serial.println(" pressed");
-    }
-    else
-    {
-      Serial.println(" released");
-    }
+    /* Got a packet! */
+    // printHex(packetbuffer, len);
 
-    if (animationState == 1)
+    // Color
+    if (packetbuffer[1] == 'C')
     {
-      larsonScanner(pixel.Color(255, 255, 255), 20);
-      larsonScanner(pixel.Color(0, 255, 255), 20);
-      larsonScanner(pixel.Color(0, 100, 255), 20);
-      larsonScanner(pixel.Color(0, 50, 255), 20);
-      pixel.show(); // This sends the updated pixel color to the hardware.
-    }
+      current_mode = Mode::Static;
+      uint8_t red = packetbuffer[2];
+      uint8_t green = packetbuffer[3];
+      uint8_t blue = packetbuffer[4];
+      Serial.print("RGB #");
+      if (red < 0x10)
+        Serial.print("0");
+      Serial.print(red, HEX);
+      if (green < 0x10)
+        Serial.print("0");
+      Serial.print(green, HEX);
+      if (blue < 0x10)
+        Serial.print("0");
+      Serial.println(blue, HEX);
 
-    if (animationState == 2)
-    {
-      colorWipe(pixel.Color(114, 0, 255), 20);
-      colorWipe(pixel.Color(0, 0, 0), 20);
-      colorWipe(pixel.Color(0, 50, 255), 20);
-      colorWipe(pixel.Color(0, 0, 0), 20);
-      colorWipe(pixel.Color(0, 220, 255), 20);
-      colorWipe(pixel.Color(0, 0, 0), 20);
-      colorWipe(pixel.Color(255, 225, 255), 20);
-      colorWipe(pixel.Color(0, 0, 0), 20);
-      pixel.show(); // This sends the updated pixel color to the hardware.
-    }
-
-    if (animationState == 3)
-    {
-      for (uint16_t i = 0; i < pixel.numPixels(); i++)
+      for (uint8_t i = 0; i < NUMPIXELS; i++)
       {
-        pixel.setPixelColor(i, pixel.Color(0, 0, 0));
+        pixel.setPixelColor(i, pixel.Color(red, green, blue));
       }
-      pixel.setBrightness(255);
-      theaterChase(255, 30);
-      theaterChase(255, 40);
-      theaterChase(255, 50);
-      theaterChase(255, 60);
-      theaterChase(255, 70);
-      theaterChase(255, 80);
-      theaterChase(255, 90);
-      theaterChase(255, 100);
-      colorWipe(pixel.Color(0, 0, 255), 20);
-      colorWipe(pixel.Color(0, 0, 0), 20);
       pixel.show(); // This sends the updated pixel color to the hardware.
     }
 
-    if (animationState == 4)
+    // Buttons
+    if (packetbuffer[1] == 'B')
     {
-      for (uint16_t i = 0; i < pixel.numPixels(); i++)
+
+      uint8_t buttnum = packetbuffer[2] - '0';
+      boolean pressed = packetbuffer[3] - '0';
+      Serial.print("Button ");
+      Serial.print(buttnum);
+      animationState = buttnum;
+      if (pressed)
       {
-        pixel.setPixelColor(i, pixel.Color(0, 0, 0));
+        Serial.println(" pressed");
+
+        /*  if (animationState == 1)
+         {
+           larsonScanner(pixel.Color(255, 255, 255), 20);
+           larsonScanner(pixel.Color(0, 255, 255), 20);
+           larsonScanner(pixel.Color(0, 100, 255), 20);
+           larsonScanner(pixel.Color(0, 50, 255), 20);
+           pixel.show(); // This sends the updated pixel color to the hardware.
+         } */
+
+        if (animationState == 2)
+        {
+          current_mode = Mode::ColorWipes;
+          animation_loop_counter = 0;
+          StartColorWipe(color_wipe_colors[animation_loop_counter], 20);
+          /* colorWipe(pixel.Color(114, 0, 255), 20);
+          colorWipe(pixel.Color(0, 0, 0), 20);
+          colorWipe(pixel.Color(0, 50, 255), 20);
+          colorWipe(pixel.Color(0, 0, 0), 20);
+          colorWipe(pixel.Color(0, 220, 255), 20);
+          colorWipe(pixel.Color(0, 0, 0), 20);
+          colorWipe(pixel.Color(255, 225, 255), 20);
+          colorWipe(pixel.Color(0, 0, 0), 20);
+          pixel.show(); // This sends the updated pixel color to the hardware. */
+        }
+
+        /* if (animationState == 3)
+        {
+          for (uint16_t i = 0; i < pixel.numPixels(); i++)
+          {
+            pixel.setPixelColor(i, pixel.Color(0, 0, 0));
+          }
+          pixel.setBrightness(255);
+          theaterChase(255, 30);
+          theaterChase(255, 40);
+          theaterChase(255, 50);
+          theaterChase(255, 60);
+          theaterChase(255, 70);
+          theaterChase(255, 80);
+          theaterChase(255, 90);
+          theaterChase(255, 100);
+          colorWipe(pixel.Color(0, 0, 255), 20);
+          colorWipe(pixel.Color(0, 0, 0), 20);
+          pixel.show(); // This sends the updated pixel color to the hardware.
+        }
+
+        if (animationState == 4)
+        {
+          for (uint16_t i = 0; i < pixel.numPixels(); i++)
+          {
+            pixel.setPixelColor(i, pixel.Color(0, 0, 0));
+          }
+          pixel.setBrightness(255);
+          rainbowCycle(10);
+          pixel.show(); // This sends the updated pixel color to the hardware.
+        } */
+
+        if (animationState == 6) // pause
+        {
+          if (current_mode != Mode::Static)
+          {
+            previous_mode = current_mode;
+            current_mode = Mode::Static;
+          }
+        }
+
+        if (animationState == 5) // resume
+        {
+          if (current_mode == Mode::Static)
+          {
+            current_mode = previous_mode;
+          }
+        }
       }
-      pixel.setBrightness(255);
-      rainbowCycle(10);
-      pixel.show(); // This sends the updated pixel color to the hardware.
+      else
+      {
+        Serial.println(" released");
+      }
     }
   }
 }
 
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait)
+void ProcessAnimationState()
 {
-  for (uint16_t i = 0; i < pixel.numPixels(); i++)
+  switch (current_mode)
   {
-    pixel.setPixelColor(i, c);
-    pixel.show();
-    delay(wait);
+  case Mode::ColorWipes:
+    if (ProcessColorWipe())
+    {
+      animation_loop_counter++;
+      if (animation_loop_counter >= num_color_wipe_colors)
+      {
+        animation_loop_counter = 0;
+      }
+      StartColorWipe(color_wipe_colors[animation_loop_counter], 30);
+    }
+    // do for other animations
+    break;
+  default:
+    break;
   }
 }
+// Fill the dots one after the other with a color
+
+uint32_t pixel_number{0};
+uint32_t last_frame_time;
+uint32_t wait_time;
+uint32_t color;
+
+void StartColorWipe(uint32_t c, uint8_t wait)
+{
+  pixel_number = 0;
+  last_frame_time = millis();
+  wait_time = wait;
+  color = c;
+}
+
+// returns whether or not the colorwipe is fiished
+bool ProcessColorWipe()
+{
+  if (pixel_number < pixel.numPixels())
+  {
+    if (millis() - last_frame_time >= wait_time) // if current time is after when the current loop iteration should be over
+    {
+      if (millis() - last_frame_time <= 2 * wait_time)
+      {
+        last_frame_time += wait_time;
+      }
+      else
+      {
+        last_frame_time = millis();
+      }
+      pixel.setPixelColor(pixel_number, color);
+      pixel.show();
+      pixel_number++; // now on the next loop iteration
+    }
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+// void colorWipe(uint32_t c, uint8_t wait)
+// {
+//   for (uint16_t i = 0; i < pixel.numPixels(); i++)
+//   {
+//     pixel.setPixelColor(i, c);
+//     pixel.show();
+//     delay(wait);
+//   }
+// }
 
 void larsonScanner(uint32_t c, uint8_t wait)
 {
